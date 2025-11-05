@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Log In | ReadSync</title>
+  <link rel="stylesheet" href="./css/style.css" />
+</head>
+<body>
+  <header>
+    <nav>
+      <a href="index.html"><strong>ReadSync</strong></a>
+      <div>
+        <a href="register.html">Sign Up</a>
+      </div>
+    </nav>
+  </header>
+  <main>
+    <section class="card" aria-labelledby="login-heading">
+      <h1 id="login-heading" style="margin-bottom: 1.5rem;">Welcome back</h1>
+      <div id="login-error" class="alert alert-error" hidden></div>
+      <form id="login-form" novalidate>
+        <label>
+          Email
+          <input type="email" name="email" autocomplete="email" required />
+        </label>
+        <label>
+          Password
+          <input type="password" name="password" autocomplete="current-password" required />
+        </label>
+        <button class="btn btn-primary" type="submit">Log In</button>
+      </form>
+      <p style="margin-top: 1.25rem; color: var(--color-muted);">New to ReadSync? <a href="register.html">Create an account</a>.</p>
+    </section>
+  </main>
+  <footer>
+    <p>&copy; <span id="year"></span> ReadSync.</p>
+  </footer>
+  <script src="./js/utils.js"></script>
+  <script src="./js/api.js"></script>
+  <script src="./js/auth.js"></script>
+  <script>
+    document.getElementById('year').textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>

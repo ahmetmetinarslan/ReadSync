@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard | ReadSync</title>
+  <link rel="stylesheet" href="./css/style.css" />
+</head>
+<body>
+  <header>
+    <nav>
+      <a href="dashboard.html"><strong>ReadSync</strong></a>
+      <div>
+        <button id="logout-button" class="btn btn-secondary" type="button">Log Out</button>
+      </div>
+    </nav>
+  </header>
+  <main>
+    <section class="dashboard-header">
+      <div>
+        <h1>Your Library</h1>
+        <p style="color: var(--color-muted);">Add books, update your progress, and keep track of reading dates.</p>
+      </div>
+      <div id="welcome-badge" class="badge" hidden></div>
+    </section>
+
+    <section class="card" style="margin-bottom: 2.5rem;" aria-labelledby="add-book-heading">
+      <h2 id="add-book-heading" style="margin-bottom: 1rem;">Add a new book</h2>
+      <div id="book-form-alert" class="alert alert-error" hidden></div>
+      <form id="book-form" novalidate>
+        <label>
+          Title
+          <input type="text" name="title" required />
+        </label>
+        <label>
+          Author
+          <input type="text" name="author" required />
+        </label>
+        <label>
+          Total pages (optional)
+          <input type="number" name="pages" min="1" />
+        </label>
+        <label>
+          Status
+          <select name="status">
+            <option value="planned">Planned</option>
+            <option value="reading">Reading</option>
+            <option value="finished">Finished</option>
+          </select>
+        </label>
+        <label>
+          Start date
+          <input type="date" name="start_date" />
+        </label>
+        <label>
+          End date
+          <input type="date" name="end_date" />
+        </label>
+        <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+          <button class="btn btn-primary" type="submit" id="book-submit-button">Save Book</button>
+          <button class="btn btn-secondary" type="button" id="cancel-edit" hidden>Cancel</button>
+        </div>
+      </form>
+    </section>
+
+    <section>
+      <div id="books-empty" class="empty-state" hidden>
+        <p>Your library is empty. Start by adding a book above.</p>
+      </div>
+      <div id="books-container" class="book-grid"></div>
+    </section>
+  </main>
+  <footer>
+    <p>&copy; <span id="year"></span> ReadSync.</p>
+  </footer>
+  <script src="./js/utils.js"></script>
+  <script src="./js/api.js"></script>
+  <script src="./js/books.js"></script>
+  <script>
+    document.getElementById('year').textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>

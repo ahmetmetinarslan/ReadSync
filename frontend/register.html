@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sign Up | ReadSync</title>
+  <link rel="stylesheet" href="./css/style.css" />
+</head>
+<body>
+  <header>
+    <nav>
+      <a href="index.html"><strong>ReadSync</strong></a>
+      <div>
+        <a href="login.html">Log In</a>
+      </div>
+    </nav>
+  </header>
+  <main>
+    <section class="card" aria-labelledby="register-heading">
+      <h1 id="register-heading" style="margin-bottom: 1.5rem;">Create your ReadSync account</h1>
+      <div id="register-error" class="alert alert-error" hidden></div>
+      <form id="register-form" novalidate>
+        <label>
+          Name
+          <input type="text" name="name" autocomplete="name" required />
+        </label>
+        <label>
+          Email
+          <input type="email" name="email" autocomplete="email" required />
+        </label>
+        <label>
+          Password
+          <input type="password" name="password" autocomplete="new-password" minlength="6" required />
+        </label>
+        <label>
+          Confirm password
+          <input type="password" name="confirmPassword" autocomplete="new-password" minlength="6" required />
+        </label>
+        <button class="btn btn-primary" type="submit">Create Account</button>
+      </form>
+      <p style="margin-top: 1.25rem; color: var(--color-muted);">Already registered? <a href="login.html">Log in</a> instead.</p>
+    </section>
+  </main>
+  <footer>
+    <p>&copy; <span id="year"></span> ReadSync.</p>
+  </footer>
+  <script src="./js/utils.js"></script>
+  <script src="./js/api.js"></script>
+  <script src="./js/auth.js"></script>
+  <script>
+    document.getElementById('year').textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>

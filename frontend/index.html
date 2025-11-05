@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ReadSync | Track Your Reading Journey</title>
+  <link rel="stylesheet" href="./css/style.css" />
+</head>
+<body>
+  <header>
+    <nav>
+      <a href="index.html" aria-label="ReadSync home"><strong>ReadSync</strong></a>
+      <div>
+        <a href="login.html">Log In</a>
+        <a href="register.html">Sign Up</a>
+      </div>
+    </nav>
+  </header>
+  <main>
+    <section class="hero">
+      <h1>Track every chapter you conquer.</h1>
+      <p>ReadSync keeps your entire reading journey organised and accessible wherever you go. Create an account, track progress, and celebrate each finished book.</p>
+      <div class="button-group">
+        <a class="btn btn-primary" href="register.html">Get Started</a>
+        <a class="btn btn-secondary" href="login.html">Log In</a>
+      </div>
+    </section>
+  </main>
+  <footer>
+    <p>&copy; <span id="year"></span> ReadSync. Built for avid readers.</p>
+  </footer>
+  <script>
+    document.getElementById('year').textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>
