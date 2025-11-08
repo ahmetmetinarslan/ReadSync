@@ -40,7 +40,7 @@
 
   function redirectIfAuthenticated() {
     if (getToken()) {
-      window.location.replace('dashboard.html');
+      window.location.replace('books.html');
     }
   }
 

@@ -1,6 +1,8 @@
-﻿(function () {
+(function () {
   const utils = window.ReadSyncUtils;
   const api = window.ReadSyncApi;
+
+  const STATUS_OPTIONS = ['planned', 'reading', 'finished'];
 
   const state = {
     books: [],
@@ -13,35 +15,61 @@
       return;
     }
 
-    const bookForm = document.getElementById('book-form');
-    const alertEl = document.getElementById('book-form-alert');
     const booksContainer = document.getElementById('books-container');
     const emptyState = document.getElementById('books-empty');
+    const alertEl = document.getElementById('books-alert');
     const logoutButton = document.getElementById('logout-button');
-    const cancelButton = document.getElementById('cancel-edit');
-    const submitButton = document.getElementById('book-submit-button');
     const welcomeBadge = document.getElementById('welcome-badge');
+    const editorModal = document.getElementById('book-editor-modal');
+    const editorForm = document.getElementById('book-editor-form');
+    const editorAlert = document.getElementById('editor-alert');
+    const editorClose = document.getElementById('editor-close');
+    const editorCancel = document.getElementById('editor-cancel');
+    const editorSubmit = document.getElementById('editor-submit');
+
+    if (!booksContainer || !emptyState) {
+      return;
+    }
 
     function resetForm() {
       state.editingId = null;
-      bookForm.reset();
-      submitButton.textContent = 'Save Book';
-      cancelButton.hidden = true;
-      utils.clearAlert(alertEl);
+      if (editorForm) {
+        editorForm.reset();
+      }
+      utils.clearAlert(editorAlert);
+      if (editorSubmit) {
+        editorSubmit.textContent = 'Save Book';
+      }
+      if (editorCancel) {
+        editorCancel.hidden = true;
+      }
+      if (editorModal) {
+        editorModal.hidden = true;
+        editorModal.setAttribute('aria-hidden', 'true');
+      }
     }
 
     function setEditing(book) {
+      if (!editorModal || !editorForm) return;
       state.editingId = book.id;
-      bookForm.title.value = book.title;
-      bookForm.author.value = book.author;
-      bookForm.pages.value = book.pages ?? '';
-      bookForm.status.value = book.status;
-      bookForm.start_date.value = book.start_date ?? '';
-      bookForm.end_date.value = book.end_date ?? '';
-      submitButton.textContent = 'Update Book';
-      cancelButton.hidden = false;
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      editorForm.title.value = book.title;
+      editorForm.author.value = book.author;
+      editorForm.pages.value = book.pages ?? '';
+      editorForm.status.value = book.status;
+      editorForm.start_date.value = book.start_date ?? '';
+      editorForm.end_date.value = book.end_date ?? '';
+      if (editorSubmit) {
+        editorSubmit.textContent = 'Update Book';
+      }
+      if (editorCancel) {
+        editorCancel.hidden = false;
+      }
+      editorModal.hidden = false;
+      editorModal.setAttribute('aria-hidden', 'false');
     }
+
+    // Ensure the form starts in "add" mode.
+    resetForm();
 
     function renderBooks() {
       booksContainer.innerHTML = '';
@@ -49,9 +77,10 @@
         emptyState.hidden = false;
         return;
       }
-      emptyState.hidden = true;
 
+      emptyState.hidden = true;
       const fragment = document.createDocumentFragment();
+
       state.books.forEach((book) => {
         const card = document.createElement('article');
         card.className = 'book-card';
@@ -92,13 +121,39 @@
           card.appendChild(meta);
         }
 
+        const statusControl = document.createElement('label');
+        statusControl.className = 'status-control';
+        statusControl.textContent = 'Status';
+
+        const statusSelect = document.createElement('select');
+        STATUS_OPTIONS.forEach((option) => {
+          const opt = document.createElement('option');
+          opt.value = option;
+          opt.textContent = option.charAt(0).toUpperCase() + option.slice(1);
+          statusSelect.appendChild(opt);
+        });
+        statusSelect.value = book.status;
+        statusSelect.addEventListener('change', async () => {
+          statusSelect.disabled = true;
+          try {
+            await updateStatus(book.id, statusSelect.value);
+          } catch (error) {
+            window.alert(error.message || 'Unable to update status.');
+            statusSelect.value = book.status;
+          } finally {
+            statusSelect.disabled = false;
+          }
+        });
+        statusControl.appendChild(statusSelect);
+        card.appendChild(statusControl);
+
         const actions = document.createElement('div');
         actions.className = 'book-actions';
 
         const editButton = document.createElement('button');
         editButton.className = 'btn btn-outline';
         editButton.type = 'button';
-        editButton.textContent = 'Edit';
+        editButton.textContent = 'Edit details';
         editButton.addEventListener('click', () => setEditing(book));
         actions.appendChild(editButton);
 
@@ -131,8 +186,8 @@
       booksContainer.appendChild(fragment);
     }
 
-    function buildPayload() {
-      const data = utils.serializeForm(bookForm);
+    function buildEditorPayload() {
+      const data = utils.serializeForm(editorForm);
       const pages = Number.parseInt(data.pages, 10);
       return {
         title: data.title.trim(),
@@ -144,7 +199,14 @@
       };
     }
 
+    async function updateStatus(id, status) {
+      const { book } = await api.updateBook(id, { status });
+      state.books = state.books.map((item) => (item.id === book.id ? book : item));
+      renderBooks();
+    }
+
     async function loadBooks() {
+      utils.clearAlert(alertEl);
       try {
         const { books } = await api.getBooks();
         state.books = books;
@@ -169,42 +231,52 @@
       }
     }
 
-    bookForm.addEventListener('submit', async (event) => {
+    editorForm?.addEventListener('submit', async (event) => {
       event.preventDefault();
-      utils.clearAlert(alertEl);
+      utils.clearAlert(editorAlert);
 
-      if (!bookForm.reportValidity()) {
+      if (!editorForm.reportValidity()) {
         return;
       }
 
-      const payload = buildPayload();
+      const payload = buildEditorPayload();
       if (!payload.title || !payload.author) {
-        utils.showAlert(alertEl, 'Title and author are required.');
+        utils.showAlert(editorAlert, 'Title and author are required.');
         return;
       }
 
+      if (editorSubmit) {
+        editorSubmit.disabled = true;
+      }
       try {
         if (state.editingId) {
           const { book } = await api.updateBook(state.editingId, payload);
           state.books = state.books.map((item) => (item.id === book.id ? book : item));
-          renderBooks();
-          resetForm();
         } else {
           const { book } = await api.createBook(payload);
           state.books = [book, ...state.books];
-          renderBooks();
-          resetForm();
         }
+        renderBooks();
+        resetForm();
       } catch (error) {
-        utils.showAlert(alertEl, error.message || 'Unable to save book.');
+        utils.showAlert(editorAlert, error.message || 'Unable to save book.');
+      } finally {
+        if (editorSubmit) {
+          editorSubmit.disabled = false;
+        }
       }
     });
 
-    cancelButton.addEventListener('click', () => {
-      resetForm();
+    editorCancel?.addEventListener('click', resetForm);
+    editorClose?.addEventListener('click', resetForm);
+
+    editorModal?.addEventListener('click', (event) => {
+      if (event.target === editorModal) {
+        resetForm();
+      }
     });
 
-    logoutButton.addEventListener('click', () => {
+    logoutButton?.addEventListener('click', () => {
       utils.clearSession();
       window.location.replace('index.html');
     });
@@ -212,5 +284,3 @@
     await Promise.all([loadProfile(), loadBooks()]);
   });
 })();
-
-

@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My Books | ReadSync</title>
+  <link rel="stylesheet" href="./css/style.css" />
+</head>
+<body>
+  <header>
+    <nav>
+      <a href="books.html"><strong>ReadSync</strong></a>
+      <div class="nav-actions">
+        <a class="btn btn-secondary" href="add-book.html">Add New Book</a>
+        <button id="logout-button" class="btn btn-secondary" type="button">Log Out</button>
+      </div>
+    </nav>
+  </header>
+  <main>
+    <section class="dashboard-header">
+      <div>
+        <h1>Your Library</h1>
+        <p style="color: var(--color-muted);">Review all of your books, update statuses, and keep your progress in sync.</p>
+      </div>
+      <div id="welcome-badge" class="badge" hidden></div>
+    </section>
+
+    <section>
+      <div id="books-alert" class="alert alert-error" hidden role="alert"></div>
+      <div id="books-empty" class="empty-state" hidden>
+        <p>Your library is empty. <a href="add-book.html">Add a book</a> to get started.</p>
+      </div>
+      <div id="books-container" class="book-grid" aria-live="polite"></div>
+    </section>
+  </main>
+
+  <div id="book-editor-modal" class="modal" hidden aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="book-editor-title">
+    <div class="modal-content card">
+      <div class="modal-header">
+        <h2 id="book-editor-title">Edit Book</h2>
+        <button id="editor-close" class="modal-close" type="button" aria-label="Close editor">&times;</button>
+      </div>
+      <div id="editor-alert" class="alert alert-error" hidden></div>
+      <form id="book-editor-form" novalidate>
+        <label>
+          Title
+          <input type="text" name="title" required />
+        </label>
+        <label>
+          Author
+          <input type="text" name="author" required />
+        </label>
+        <label>
+          Total pages (optional)
+          <input type="number" name="pages" min="1" />
+        </label>
+        <label>
+          Status
+          <select name="status">
+            <option value="planned">Planned</option>
+            <option value="reading">Reading</option>
+            <option value="finished">Finished</option>
+          </select>
+        </label>
+        <label>
+          Start date
+          <input type="date" name="start_date" />
+        </label>
+        <label>
+          End date
+          <input type="date" name="end_date" />
+        </label>
+        <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+          <button class="btn btn-primary" type="submit" id="editor-submit">Save Changes</button>
+          <button class="btn btn-secondary" type="button" id="editor-cancel">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <footer>
+    <p>&copy; <span id="year"></span> ReadSync.</p>
+  </footer>
+  <script src="./js/utils.js"></script>
+  <script src="./js/api.js"></script>
+  <script src="./js/books.js"></script>
+  <script>
+    document.getElementById('year').textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>

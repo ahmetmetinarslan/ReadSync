@@ -27,7 +27,7 @@
             password: data.password,
           });
           utils.saveSession(result);
-          window.location.replace('dashboard.html');
+          window.location.replace('books.html');
         } catch (error) {
           utils.showAlert(errorEl, error.message || 'Unable to log in.');
         }
@@ -57,7 +57,7 @@
             password: data.password,
           });
           utils.saveSession(result);
-          window.location.replace('dashboard.html');
+          window.location.replace('books.html');
         } catch (error) {
           utils.showAlert(errorEl, error.message || 'Unable to register.');
         }

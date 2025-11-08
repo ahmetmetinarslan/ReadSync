@@ -27,6 +27,15 @@ function createServer() {
 
   const staticDir = path.resolve(__dirname, '..', 'frontend');
   app.use(express.static(staticDir));
+  app.get('/books', (_req, res) => {
+    res.sendFile(path.join(staticDir, 'books.html'));
+  });
+  app.get('/add-book', (_req, res) => {
+    res.sendFile(path.join(staticDir, 'add-book.html'));
+  });
+  app.get(['/dashboard', '/dashboard.html'], (_req, res) => {
+    res.redirect(302, '/books');
+  });
   app.get('*', (req, res, next) => {
     if (req.path.startsWith('/api/')) {
       return next();
