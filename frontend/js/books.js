@@ -121,6 +121,52 @@
           card.appendChild(meta);
         }
 
+        const hasTotalPages = typeof book.pages === 'number' && book.pages > 0;
+        const progressInfo = document.createElement('p');
+        progressInfo.className = 'book-progress';
+        progressInfo.textContent = hasTotalPages
+          ? `Progress: ${book.current_page} / ${book.pages}`
+          : `Current page: ${book.current_page}`;
+        card.appendChild(progressInfo);
+
+        const progressControls = document.createElement('div');
+        progressControls.className = 'progress-controls';
+        progressControls.setAttribute('aria-label', `Update progress for ${book.title}`);
+
+        const progressInput = document.createElement('input');
+        progressInput.type = 'number';
+        progressInput.min = '0';
+        progressInput.value = book.current_page ?? 0;
+        progressInput.setAttribute('aria-label', `${book.title} new current page`);
+        if (hasTotalPages) {
+          progressInput.max = String(book.pages);
+        }
+        progressControls.appendChild(progressInput);
+
+        const progressButton = document.createElement('button');
+        progressButton.className = 'btn btn-outline';
+        progressButton.type = 'button';
+        progressButton.textContent = 'Save progress';
+        progressButton.addEventListener('click', async () => {
+          const rawValue = Number.parseInt(progressInput.value, 10);
+          progressButton.disabled = true;
+          try {
+            await saveProgress(book.id, rawValue, hasTotalPages ? book.pages : null);
+          } catch (error) {
+            window.alert(error.message || 'Unable to update progress.');
+          } finally {
+            progressButton.disabled = false;
+          }
+        });
+        progressInput.addEventListener('keydown', (event) => {
+          if (event.key === 'Enter') {
+            event.preventDefault();
+            progressButton.click();
+          }
+        });
+        progressControls.appendChild(progressButton);
+        card.appendChild(progressControls);
+
         const statusControl = document.createElement('label');
         statusControl.className = 'status-control';
         statusControl.textContent = 'Status';
@@ -197,6 +243,23 @@
         start_date: data.start_date || null,
         end_date: data.end_date || null,
       };
+    }
+
+    function clampProgressValue(value, limit) {
+      if (Number.isNaN(value) || value < 0) {
+        return 0;
+      }
+      if (typeof limit === 'number' && limit >= 0) {
+        return Math.min(value, limit);
+      }
+      return value;
+    }
+
+    async function saveProgress(id, value, limit) {
+      const nextValue = clampProgressValue(value, limit);
+      const { book } = await api.updateBook(id, { current_page: nextValue });
+      state.books = state.books.map((item) => (item.id === book.id ? book : item));
+      renderBooks();
     }
 
     async function updateStatus(id, status) {

@@ -21,11 +21,13 @@
     function buildPayload() {
       const data = utils.serializeForm(bookForm);
       const pages = Number.parseInt(data.pages, 10);
+      const currentPage = Number.parseInt(data.current_page, 10);
       return {
         title: data.title.trim(),
         author: data.author.trim(),
         status: data.status,
         pages: Number.isNaN(pages) ? null : pages,
+        current_page: Number.isNaN(currentPage) ? 0 : currentPage,
         start_date: data.start_date || null,
         end_date: data.end_date || null,
       };

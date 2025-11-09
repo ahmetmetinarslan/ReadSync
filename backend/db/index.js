@@ -14,10 +14,19 @@ function resolveDbPath() {
     : path.resolve(__dirname, '..', rawPath);
 }
 
+function ensureCurrentPageColumn(db) {
+  const columns = db.prepare('PRAGMA table_info(books)').all();
+  const hasCurrentPage = columns.some((column) => column.name === 'current_page');
+  if (!hasCurrentPage) {
+    db.prepare('ALTER TABLE books ADD COLUMN current_page INTEGER NOT NULL DEFAULT 0').run();
+  }
+}
+
 function runMigrations(db) {
   const migrationsPath = path.resolve(__dirname, 'migrations.sql');
   const sql = fs.readFileSync(migrationsPath, 'utf-8');
   db.exec(sql);
+  ensureCurrentPageColumn(db);
 }
 
 function getDb() {

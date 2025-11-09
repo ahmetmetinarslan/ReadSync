@@ -31,6 +31,10 @@ function normalizeBookInput(input) {
     const parsedPages = Number.parseInt(input.pages, 10);
     payload.pages = Number.isNaN(parsedPages) || parsedPages < 0 ? null : parsedPages;
   }
+  if (input.current_page !== undefined) {
+    const parsedCurrent = Number.parseInt(input.current_page, 10);
+    payload.current_page = Number.isNaN(parsedCurrent) || parsedCurrent < 0 ? 0 : parsedCurrent;
+  }
   if (typeof input.status === 'string') {
     const status = input.status.toLowerCase().trim();
     if (!ALLOWED_STATUSES.has(status)) {
@@ -46,6 +50,18 @@ function normalizeBookInput(input) {
   }
 
   return payload;
+}
+
+function clampCurrentPage(payload, pagesLimit) {
+  if (!Object.prototype.hasOwnProperty.call(payload, 'current_page')) {
+    return;
+  }
+  if (payload.current_page < 0) {
+    payload.current_page = 0;
+  }
+  if (typeof pagesLimit === 'number' && !Number.isNaN(pagesLimit)) {
+    payload.current_page = Math.min(payload.current_page, pagesLimit);
+  }
 }
 
 exports.list = (req, res, next) => {
@@ -78,6 +94,11 @@ exports.create = (req, res, next) => {
     if (!payload.status) {
       payload.status = 'planned';
     }
+    if (!Object.prototype.hasOwnProperty.call(payload, 'current_page')) {
+      payload.current_page = 0;
+    }
+    const pagesLimit = typeof payload.pages === 'number' ? payload.pages : null;
+    clampCurrentPage(payload, pagesLimit);
 
     const book = createBook(req.user.id, payload);
     res.status(201).json({ book });
@@ -94,6 +115,12 @@ exports.update = (req, res, next) => {
     }
 
     const payload = normalizeBookInput(req.body);
+    const limitSource = Object.prototype.hasOwnProperty.call(payload, 'pages')
+      ? payload.pages
+      : existing.pages;
+    const normalizedLimit = typeof limitSource === 'number' ? limitSource : null;
+    clampCurrentPage(payload, normalizedLimit);
+
     const updated = updateBook(req.user.id, existing.id, payload);
     res.json({ book: updated });
   } catch (error) {
