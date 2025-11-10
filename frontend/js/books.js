@@ -122,12 +122,33 @@
         }
 
         const hasTotalPages = typeof book.pages === 'number' && book.pages > 0;
-        const progressInfo = document.createElement('p');
-        progressInfo.className = 'book-progress';
-        progressInfo.textContent = hasTotalPages
-          ? `Progress: ${book.current_page} / ${book.pages}`
-          : `Current page: ${book.current_page}`;
-        card.appendChild(progressInfo);
+        const currentPageValue = Number(book.current_page ?? 0);
+        const currentPage = Number.isFinite(currentPageValue) ? currentPageValue : 0;
+        const percent = hasTotalPages
+          ? Math.min(100, Math.max(0, (currentPage / book.pages) * 100))
+          : 0;
+        const roundedPercent = Math.round(percent);
+
+        const progressWrapper = document.createElement('div');
+        progressWrapper.className = 'book-progress';
+
+        const progressLabel = document.createElement('span');
+        progressLabel.className = 'book-progress-label';
+        progressLabel.textContent = hasTotalPages
+          ? `Progress: ${currentPage} / ${book.pages} (${roundedPercent}%)`
+          : `Current page: ${currentPage}`;
+        progressWrapper.appendChild(progressLabel);
+
+        const progressBar = document.createElement('div');
+        progressBar.className = 'book-progress-bar';
+
+        const progressFill = document.createElement('div');
+        progressFill.className = 'book-progress-bar-fill';
+        progressFill.style.width = `${percent}%`;
+        progressBar.appendChild(progressFill);
+
+        progressWrapper.appendChild(progressBar);
+        card.appendChild(progressWrapper);
 
         const progressControls = document.createElement('div');
         progressControls.className = 'progress-controls';
