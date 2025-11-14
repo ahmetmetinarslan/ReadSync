@@ -25,6 +25,22 @@
       <div id="welcome-badge" class="badge" hidden></div>
     </section>
 
+    <section class="card" aria-labelledby="book-search-heading">
+      <div class="book-search-header">
+        <div>
+          <h2 id="book-search-heading" style="margin-bottom: 0.35rem;">Search Open Library</h2>
+          <p style="color: var(--color-muted);">Find a book by title, author, or ISBN and auto-fill the form with metadata and cover art.</p>
+        </div>
+        <form id="book-search-form" class="book-search-form" role="search" novalidate>
+          <label class="sr-only" for="book-search-input">Search books</label>
+          <input id="book-search-input" type="text" name="query" placeholder="Search title, author, or ISBN" autocomplete="off" required />
+          <button id="book-search-button" class="btn btn-secondary" type="submit">Search</button>
+        </form>
+      </div>
+      <p style="color: var(--color-muted); font-size: 0.9rem; margin-top: 0.5rem;">Powered by <a href="https://openlibrary.org" target="_blank" rel="noreferrer">Open Library</a>.</p>
+      <div id="book-search-inline-alert" class="alert alert-error" hidden></div>
+    </section>
+
     <section class="card" aria-labelledby="add-book-heading">
       <h2 id="add-book-heading" style="margin-bottom: 1rem;">Book details</h2>
       <div id="book-form-alert" class="alert alert-error" hidden></div>
@@ -61,6 +77,18 @@
           End date
           <input type="date" name="end_date" />
         </label>
+        <label>
+          ISBN (optional)
+          <input type="text" name="isbn" inputmode="numeric" placeholder="978..." />
+        </label>
+        <label>
+          Cover image URL (optional)
+          <input type="url" name="cover_url" placeholder="https://covers.openlibrary.org/..." />
+        </label>
+        <div id="cover-preview" class="cover-preview" hidden>
+          <img id="cover-preview-image" alt="Selected cover preview" />
+          <button id="cover-preview-remove" class="btn btn-link" type="button">Remove cover</button>
+        </div>
         <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
           <button class="btn btn-primary" type="submit" id="book-submit-button">Save Book</button>
           <a class="btn btn-secondary" href="books.html">Back to My Books</a>
@@ -68,6 +96,16 @@
       </form>
     </section>
   </main>
+  <div id="book-search-modal" class="modal" hidden aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="book-search-modal-title">
+    <div class="modal-content card search-modal-content">
+      <div class="modal-header">
+        <h2 id="book-search-modal-title">Select a Book</h2>
+        <button id="book-search-close" class="modal-close" type="button" aria-label="Close search results">&times;</button>
+      </div>
+      <div id="book-search-status" class="search-status" role="status">Start a search to see results.</div>
+      <div id="book-search-results" class="search-results-list" aria-live="polite"></div>
+    </div>
+  </div>
   <footer>
     <p>&copy; <span id="year"></span> ReadSync.</p>
   </footer>

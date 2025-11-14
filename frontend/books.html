@@ -70,6 +70,14 @@
           End date
           <input type="date" name="end_date" />
         </label>
+        <label>
+          ISBN (optional)
+          <input type="text" name="isbn" inputmode="numeric" placeholder="978..." />
+        </label>
+        <label>
+          Cover image URL (optional)
+          <input type="url" name="cover_url" placeholder="https://covers.openlibrary.org/..." />
+        </label>
         <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
           <button class="btn btn-primary" type="submit" id="editor-submit">Save Changes</button>
           <button class="btn btn-secondary" type="button" id="editor-cancel">Cancel</button>

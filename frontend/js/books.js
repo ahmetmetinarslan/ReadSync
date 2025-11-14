@@ -58,6 +58,12 @@
       editorForm.status.value = book.status;
       editorForm.start_date.value = book.start_date ?? '';
       editorForm.end_date.value = book.end_date ?? '';
+      if (editorForm.isbn) {
+        editorForm.isbn.value = book.isbn ?? '';
+      }
+      if (editorForm.cover_url) {
+        editorForm.cover_url.value = book.cover_url ?? '';
+      }
       if (editorSubmit) {
         editorSubmit.textContent = 'Update Book';
       }
@@ -85,6 +91,15 @@
         const card = document.createElement('article');
         card.className = 'book-card';
         card.dataset.id = book.id;
+
+        if (book.cover_url) {
+          const coverImage = document.createElement('img');
+          coverImage.src = book.cover_url;
+          coverImage.alt = `${book.title} cover`;
+          coverImage.loading = 'lazy';
+          coverImage.className = 'book-card-cover';
+          card.appendChild(coverImage);
+        }
 
         const title = document.createElement('h3');
         title.textContent = book.title;
@@ -116,6 +131,11 @@
           const end = document.createElement('span');
           end.textContent = `Finished ${utils.formatDate(book.end_date)}`;
           meta.appendChild(end);
+        }
+        if (book.isbn) {
+          const isbn = document.createElement('span');
+          isbn.textContent = `ISBN ${book.isbn}`;
+          meta.appendChild(isbn);
         }
         if (meta.childElementCount) {
           card.appendChild(meta);
@@ -253,6 +273,14 @@
       booksContainer.appendChild(fragment);
     }
 
+    function normalizeOptionalText(value) {
+      if (typeof value !== 'string') {
+        return null;
+      }
+      const trimmed = value.trim();
+      return trimmed.length ? trimmed : null;
+    }
+
     function buildEditorPayload() {
       const data = utils.serializeForm(editorForm);
       const pages = Number.parseInt(data.pages, 10);
@@ -263,6 +291,8 @@
         pages: Number.isNaN(pages) ? null : pages,
         start_date: data.start_date || null,
         end_date: data.end_date || null,
+        isbn: normalizeOptionalText(data.isbn),
+        cover_url: normalizeOptionalText(data.cover_url),
       };
     }
 

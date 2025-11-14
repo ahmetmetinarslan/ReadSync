@@ -13,6 +13,8 @@ CREATE TABLE IF NOT EXISTS books (
     author TEXT NOT NULL,
     pages INTEGER,
     current_page INTEGER NOT NULL DEFAULT 0,
+    isbn TEXT,
+    cover_url TEXT,
     status TEXT NOT NULL DEFAULT 'planned',
     start_date TEXT,
     end_date TEXT,

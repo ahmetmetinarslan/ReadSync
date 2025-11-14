@@ -35,6 +35,20 @@ function normalizeBookInput(input) {
     const parsedCurrent = Number.parseInt(input.current_page, 10);
     payload.current_page = Number.isNaN(parsedCurrent) || parsedCurrent < 0 ? 0 : parsedCurrent;
   }
+  if (typeof input.isbn === 'string') {
+    const isbn = input.isbn.trim();
+    payload.isbn = isbn.length ? isbn : null;
+  }
+  if (typeof input.cover_url === 'string') {
+    const coverUrl = input.cover_url.trim();
+    if (!coverUrl) {
+      payload.cover_url = null;
+    } else if (!/^https?:\/\//i.test(coverUrl)) {
+      throw Object.assign(new Error('Cover image URL must start with http or https.'), { statusCode: 400 });
+    } else {
+      payload.cover_url = coverUrl;
+    }
+  }
   if (typeof input.status === 'string') {
     const status = input.status.toLowerCase().trim();
     if (!ALLOWED_STATUSES.has(status)) {

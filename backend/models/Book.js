@@ -1,11 +1,22 @@
 const { getDb } = require('../db');
 
-const updatableFields = ['title', 'author', 'pages', 'status', 'start_date', 'end_date', 'current_page'];
+const updatableFields = [
+  'title',
+  'author',
+  'pages',
+  'status',
+  'start_date',
+  'end_date',
+  'current_page',
+  'isbn',
+  'cover_url',
+];
 
 function getAllByUser(userId) {
   const db = getDb();
   const stmt = db.prepare(
-    `SELECT id, user_id, title, author, pages, current_page, status, start_date, end_date, created_at, updated_at
+    `SELECT id, user_id, title, author, pages, current_page, isbn, cover_url, status,
+            start_date, end_date, created_at, updated_at
      FROM books WHERE user_id = ? ORDER BY created_at DESC`
   );
   return stmt.all(userId);
@@ -14,7 +25,8 @@ function getAllByUser(userId) {
 function getByIdForUser(bookId, userId) {
   const db = getDb();
   const stmt = db.prepare(
-    `SELECT id, user_id, title, author, pages, current_page, status, start_date, end_date, created_at, updated_at
+    `SELECT id, user_id, title, author, pages, current_page, isbn, cover_url, status,
+            start_date, end_date, created_at, updated_at
      FROM books WHERE id = ? AND user_id = ?`
   );
   return stmt.get(bookId, userId);
@@ -23,8 +35,30 @@ function getByIdForUser(bookId, userId) {
 function createBook(userId, data) {
   const db = getDb();
   const stmt = db.prepare(
-    `INSERT INTO books (user_id, title, author, pages, current_page, status, start_date, end_date)
-     VALUES (@user_id, @title, @author, @pages, @current_page, @status, @start_date, @end_date)`
+    `INSERT INTO books (
+        user_id,
+        title,
+        author,
+        pages,
+        current_page,
+        isbn,
+        cover_url,
+        status,
+        start_date,
+        end_date
+      )
+     VALUES (
+        @user_id,
+        @title,
+        @author,
+        @pages,
+        @current_page,
+        @isbn,
+        @cover_url,
+        @status,
+        @start_date,
+        @end_date
+      )`
   );
   const payload = {
     user_id: userId,
@@ -32,6 +66,8 @@ function createBook(userId, data) {
     author: data.author,
     pages: data.pages ?? null,
     current_page: data.current_page ?? 0,
+    isbn: data.isbn ?? null,
+    cover_url: data.cover_url ?? null,
     status: data.status ?? 'planned',
     start_date: data.start_date ?? null,
     end_date: data.end_date ?? null,

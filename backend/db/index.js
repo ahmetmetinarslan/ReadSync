@@ -1,4 +1,4 @@
-﻿const fs = require('fs');
+const fs = require('fs');
 const path = require('path');
 const Database = require('better-sqlite3');
 const dotenv = require('dotenv');
@@ -14,19 +14,28 @@ function resolveDbPath() {
     : path.resolve(__dirname, '..', rawPath);
 }
 
-function ensureCurrentPageColumn(db) {
+function ensureBookColumns(db) {
   const columns = db.prepare('PRAGMA table_info(books)').all();
-  const hasCurrentPage = columns.some((column) => column.name === 'current_page');
-  if (!hasCurrentPage) {
-    db.prepare('ALTER TABLE books ADD COLUMN current_page INTEGER NOT NULL DEFAULT 0').run();
-  }
+  const columnNames = new Set(columns.map((column) => column.name));
+
+  const ensureColumn = (name, definition) => {
+    if (columnNames.has(name)) {
+      return;
+    }
+    db.prepare(`ALTER TABLE books ADD COLUMN ${name} ${definition}`).run();
+    columnNames.add(name);
+  };
+
+  ensureColumn('current_page', 'INTEGER NOT NULL DEFAULT 0');
+  ensureColumn('isbn', 'TEXT');
+  ensureColumn('cover_url', 'TEXT');
 }
 
 function runMigrations(db) {
   const migrationsPath = path.resolve(__dirname, 'migrations.sql');
   const sql = fs.readFileSync(migrationsPath, 'utf-8');
   db.exec(sql);
-  ensureCurrentPageColumn(db);
+  ensureBookColumns(db);
 }
 
 function getDb() {
@@ -42,4 +51,3 @@ function getDb() {
 module.exports = {
   getDb,
 };
-
