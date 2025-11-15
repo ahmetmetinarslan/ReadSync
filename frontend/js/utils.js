@@ -42,10 +42,17 @@
     const icon = theme === 'dark' ? '☀️' : '🌙';
     const pressed = theme === 'dark' ? 'true' : 'false';
     themeToggleButtons.forEach((button) => {
-      button.textContent = icon;
+      if (!button?.isConnected) {
+        themeToggleButtons.delete(button);
+        return;
+      }
       button.setAttribute('aria-label', label);
       button.setAttribute('title', label);
       button.setAttribute('aria-pressed', pressed);
+      const thumb = button.querySelector('.theme-toggle-thumb');
+      if (thumb) {
+        thumb.setAttribute('data-theme-icon', icon);
+      }
     });
   }
 
@@ -159,7 +166,11 @@
       pendingThemeClass = null;
     }
     const toggles = document.querySelectorAll('[data-theme-toggle]');
+    if (!toggles.length) {
+      return;
+    }
     toggles.forEach((button) => setupThemeToggle(button));
+    refreshThemeToggleButtons();
   });
 
   window.ReadSyncUtils = {
