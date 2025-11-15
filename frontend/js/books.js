@@ -26,10 +26,19 @@
     const editorClose = document.getElementById('editor-close');
     const editorCancel = document.getElementById('editor-cancel');
     const editorSubmit = document.getElementById('editor-submit');
+    const currentlyReadingSection = document.getElementById('currently-reading-section');
+    const currentlyReadingList = document.getElementById('active-books');
+    const currentlyReadingScroll = document.getElementById('currently-reading-scroll');
+    const allBooksSection = document.getElementById('all-books-section');
 
     if (!booksContainer || !emptyState) {
       return;
     }
+
+    currentlyReadingScroll?.addEventListener('click', () => {
+      const target = allBooksSection || booksContainer;
+      target?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
 
     function resetForm() {
       state.editingId = null;
@@ -77,17 +86,212 @@
     // Ensure the form starts in "add" mode.
     resetForm();
 
+    function partitionBooks() {
+      const active = [];
+      const others = [];
+      state.books.forEach((book) => {
+        if (book.status === 'reading') {
+          active.push(book);
+        } else {
+          others.push(book);
+        }
+      });
+      return { active, others };
+    }
+
+    function createCurrentlyReadingCard(book) {
+      const card = document.createElement('article');
+      card.className = 'currently-reading-card';
+
+      const cover = document.createElement('div');
+      cover.className = 'currently-reading-cover';
+      if (book.cover_url) {
+        const img = document.createElement('img');
+        img.src = book.cover_url;
+        img.alt = `${book.title} cover`;
+        img.loading = 'lazy';
+        cover.appendChild(img);
+      } else {
+        cover.textContent = 'No cover';
+      }
+      card.appendChild(cover);
+
+      const body = document.createElement('div');
+      body.className = 'currently-reading-body';
+      card.appendChild(body);
+
+      const label = document.createElement('span');
+      label.className = 'currently-reading-label';
+      label.textContent = 'Continue reading';
+      body.appendChild(label);
+
+      const title = document.createElement('h3');
+      title.textContent = book.title;
+      body.appendChild(title);
+
+      const author = document.createElement('p');
+      author.className = 'currently-reading-author';
+      author.textContent = `by ${book.author}`;
+      body.appendChild(author);
+
+      const hasTotalPages = typeof book.pages === 'number' && book.pages > 0;
+      const currentPageValue = Number(book.current_page ?? 0);
+      const currentPage = Number.isFinite(currentPageValue) ? currentPageValue : 0;
+      const percent = hasTotalPages
+        ? Math.min(100, Math.max(0, (currentPage / book.pages) * 100))
+        : 0;
+      const roundedPercent = Math.round(percent);
+
+      const progressWrap = document.createElement('div');
+      progressWrap.className = 'currently-reading-progress';
+
+      const progressText = document.createElement('p');
+      progressText.className = 'currently-reading-progress-text';
+      progressText.textContent = hasTotalPages
+        ? `On page ${currentPage} of ${book.pages} (${roundedPercent}%)`
+        : `On page ${currentPage}`;
+      progressWrap.appendChild(progressText);
+
+      const progressBar = document.createElement('div');
+      progressBar.className = 'currently-reading-progress-bar';
+      const progressFill = document.createElement('span');
+      progressFill.style.width = `${percent}%`;
+      progressBar.appendChild(progressFill);
+      progressWrap.appendChild(progressBar);
+      body.appendChild(progressWrap);
+
+      if (book.start_date) {
+        const started = document.createElement('p');
+        started.className = 'currently-reading-meta';
+        started.textContent = `Started ${utils.formatDate(book.start_date)}`;
+        body.appendChild(started);
+      }
+
+      const inputsRow = document.createElement('div');
+      inputsRow.className = 'currently-reading-inputs';
+
+      const progressInput = document.createElement('input');
+      progressInput.type = 'number';
+      progressInput.min = '1';
+      progressInput.value = '';
+      progressInput.placeholder = 'Pages read today';
+      progressInput.setAttribute('aria-label', `${book.title} pages read today`);
+      progressInput.inputMode = 'numeric';
+      if (hasTotalPages) {
+        const remaining = Math.max(0, book.pages - currentPage);
+        if (remaining > 0) {
+          progressInput.max = String(remaining);
+        }
+      }
+      inputsRow.appendChild(progressInput);
+
+      const saveButton = document.createElement('button');
+      saveButton.className = 'btn btn-primary btn-sm';
+      saveButton.type = 'button';
+      saveButton.textContent = 'Add progress';
+      saveButton.addEventListener('click', async () => {
+        const increment = Number.parseInt(progressInput.value, 10);
+        if (Number.isNaN(increment) || increment <= 0) {
+          window.alert('Enter how many pages you read.');
+          return;
+        }
+        saveButton.disabled = true;
+        try {
+          await saveProgress(
+            book.id,
+            currentPage + increment,
+            hasTotalPages ? book.pages : null,
+          );
+          progressInput.value = '';
+        } catch (error) {
+          window.alert(error.message || 'Unable to update progress.');
+        } finally {
+          saveButton.disabled = false;
+        }
+      });
+      progressInput.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter') {
+          event.preventDefault();
+          saveButton.click();
+        }
+      });
+      inputsRow.appendChild(saveButton);
+      body.appendChild(inputsRow);
+
+      const actions = document.createElement('div');
+      actions.className = 'currently-reading-actions';
+
+      const finishButton = document.createElement('button');
+      finishButton.className = 'btn btn-secondary btn-sm';
+      finishButton.type = 'button';
+      finishButton.textContent = 'Mark finished';
+      finishButton.addEventListener('click', async () => {
+        finishButton.disabled = true;
+        try {
+          await updateStatus(book.id, 'finished');
+        } catch (error) {
+          window.alert(error.message || 'Unable to update status.');
+        } finally {
+          finishButton.disabled = false;
+        }
+      });
+      actions.appendChild(finishButton);
+
+      const editButton = document.createElement('button');
+      editButton.className = 'btn btn-outline btn-sm';
+      editButton.type = 'button';
+      editButton.textContent = 'Edit details';
+      editButton.addEventListener('click', () => setEditing(book));
+      actions.appendChild(editButton);
+
+      body.appendChild(actions);
+      return card;
+    }
+
+    function renderCurrentlyReading(activeBooks) {
+      if (!currentlyReadingList || !currentlyReadingSection) {
+        return;
+      }
+      if (!activeBooks.length) {
+        currentlyReadingList.innerHTML = '';
+        currentlyReadingSection.hidden = true;
+        return;
+      }
+
+      currentlyReadingSection.hidden = false;
+      currentlyReadingList.innerHTML = '';
+      const fragment = document.createDocumentFragment();
+      activeBooks.forEach((book) => {
+        fragment.appendChild(createCurrentlyReadingCard(book));
+      });
+      currentlyReadingList.appendChild(fragment);
+    }
+
     function renderBooks() {
+      const { active, others } = partitionBooks();
+      renderCurrentlyReading(active);
+      renderBookGrid(others, state.books.length);
+    }
+
+    function renderBookGrid(books, totalCount) {
       booksContainer.innerHTML = '';
-      if (!state.books.length) {
+      if (!totalCount) {
         emptyState.hidden = false;
         return;
       }
 
       emptyState.hidden = true;
+      if (!books.length) {
+        const placeholder = document.createElement('p');
+        placeholder.className = 'all-books-placeholder';
+        placeholder.textContent = 'Planned and finished books will appear here once you add them.';
+        booksContainer.appendChild(placeholder);
+        return;
+      }
+
       const fragment = document.createDocumentFragment();
 
-      state.books.forEach((book) => {
+      books.forEach((book) => {
         const card = document.createElement('article');
         card.className = 'book-card';
         card.dataset.id = book.id;

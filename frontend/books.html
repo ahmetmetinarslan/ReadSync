@@ -6,11 +6,14 @@
   <title>My Books | ReadSync</title>
   <link rel="stylesheet" href="./css/style.css" />
 </head>
-<body>
+<body class="theme-light">
   <header>
     <nav>
       <a href="books.html"><strong>ReadSync</strong></a>
       <div class="nav-actions">
+        <button id="theme-toggle" class="btn btn-outline theme-toggle" type="button" data-theme-toggle aria-pressed="false" aria-label="Toggle theme">
+          🌙
+        </button>
         <a class="btn btn-secondary" href="add-book.html">Add New Book</a>
         <button id="logout-button" class="btn btn-secondary" type="button">Log Out</button>
       </div>
@@ -24,8 +27,16 @@
       </div>
       <div id="welcome-badge" class="badge" hidden></div>
     </section>
+    <section id="currently-reading-section" class="card currently-reading" hidden aria-live="polite">
+      <div class="currently-reading-header">
+        <h2>Currently Reading</h2>
+        <button id="currently-reading-scroll" class="btn btn-outline btn-sm" type="button">View full library</button>
+      </div>
+      <div id="active-books" class="currently-reading-list"></div>
+    </section>
 
-    <section>
+    <section id="all-books-section">
+      <h2 class="section-heading">All Books</h2>
       <div id="books-alert" class="alert alert-error" hidden role="alert"></div>
       <div id="books-empty" class="empty-state" hidden>
         <p>Your library is empty. <a href="add-book.html">Add a book</a> to get started.</p>

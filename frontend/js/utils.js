@@ -1,6 +1,84 @@
 ﻿(function () {
   const TOKEN_KEY = 'readsync_token';
   const USER_KEY = 'readsync_user';
+  const THEME_KEY = 'readsync_theme';
+  const DARK_MODE_START_HOUR = 19;
+  const DARK_MODE_END_HOUR = 6;
+  const themeToggleButtons = new Set();
+  let activeTheme = 'light';
+  let pendingThemeClass = null;
+
+  function computeAutoTheme() {
+    const hours = new Date().getHours();
+    return hours >= DARK_MODE_START_HOUR || hours < DARK_MODE_END_HOUR ? 'dark' : 'light';
+  }
+
+  function getStoredThemePreference() {
+    return localStorage.getItem(THEME_KEY);
+  }
+
+  function applyThemePreference(theme) {
+    activeTheme = theme === 'dark' ? 'dark' : 'light';
+    const className = activeTheme === 'dark' ? 'theme-dark' : 'theme-light';
+    if (document.body) {
+      document.body.classList.remove('theme-light', 'theme-dark');
+      document.body.classList.add(className);
+    } else {
+      pendingThemeClass = className;
+    }
+    return activeTheme;
+  }
+
+  function getTheme() {
+    return activeTheme;
+  }
+
+  function refreshThemeToggleButtons() {
+    if (!themeToggleButtons.size) {
+      return;
+    }
+    const theme = getTheme();
+    const label = theme === 'dark' ? 'Switch to day mode' : 'Switch to night mode';
+    const icon = theme === 'dark' ? '☀️' : '🌙';
+    const pressed = theme === 'dark' ? 'true' : 'false';
+    themeToggleButtons.forEach((button) => {
+      button.textContent = icon;
+      button.setAttribute('aria-label', label);
+      button.setAttribute('title', label);
+      button.setAttribute('aria-pressed', pressed);
+    });
+  }
+
+  function setThemePreference(theme, { persist = true } = {}) {
+    const applied = applyThemePreference(theme);
+    if (persist) {
+      localStorage.setItem(THEME_KEY, applied);
+    }
+    refreshThemeToggleButtons();
+    return applied;
+  }
+
+  function toggleThemePreference() {
+    const next = getTheme() === 'dark' ? 'light' : 'dark';
+    return setThemePreference(next);
+  }
+
+  function setupThemeToggle(button) {
+    if (!button || themeToggleButtons.has(button)) {
+      return;
+    }
+    themeToggleButtons.add(button);
+    button.addEventListener('click', () => {
+      toggleThemePreference();
+    });
+    refreshThemeToggleButtons();
+  }
+
+  (function initializeTheme() {
+    const stored = getStoredThemePreference();
+    const initial = stored === 'light' || stored === 'dark' ? stored : computeAutoTheme();
+    applyThemePreference(initial);
+  })();
 
   function saveSession({ token, user }) {
     if (token) {
@@ -74,6 +152,16 @@
     }).format(date);
   }
 
+  document.addEventListener('DOMContentLoaded', () => {
+    if (pendingThemeClass && document.body) {
+      document.body.classList.remove('theme-light', 'theme-dark');
+      document.body.classList.add(pendingThemeClass);
+      pendingThemeClass = null;
+    }
+    const toggles = document.querySelectorAll('[data-theme-toggle]');
+    toggles.forEach((button) => setupThemeToggle(button));
+  });
+
   window.ReadSyncUtils = {
     saveSession,
     getToken,
@@ -85,6 +173,10 @@
     showAlert,
     clearAlert,
     formatDate,
+    getTheme,
+    setThemePreference,
+    toggleThemePreference,
+    setupThemeToggle,
   };
 })();
 
